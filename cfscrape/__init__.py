@@ -3,6 +3,7 @@
 import logging
 import random
 import re
+import json
 import ssl
 import subprocess
 import copy
@@ -119,7 +120,6 @@ class CloudflareScraper(Session):
 
     def request(self, method, url, *args, **kwargs):
         resp = super(CloudflareScraper, self).request(method, url, *args, **kwargs)
-
         # Check if Cloudflare captcha challenge is presented
         if self.is_cloudflare_captcha_challenge(resp):
             self.handle_captcha_challenge(resp, url)
@@ -271,8 +271,10 @@ class CloudflareScraper(Session):
             # Interpolate the domain, div contents, and JS challenge.
             # The `a.value` to be returned is tacked onto the end.
             challenge = """
+                var html = %s;
                 var document = {
-                    createElement: function () {
+                    createElement: function (s) {
+                    
                       return { firstChild: { href: "http://%s/" } }
                     },
                     getElementById: function (id) {
